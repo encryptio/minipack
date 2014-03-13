@@ -298,14 +298,18 @@ if ( not defined $output_image or not defined $output_map ) {
     exit 1;
 }
 
-my @inputs =
+my @inputs;
+for my $input_file ( @input_files ) {
+    print STDERR "Loading image $input_file\n" if $verbose;
+    push @inputs, { name => $input_file, image => load_image($input_file) };
+}
+
+@inputs =
     sort {
         $b->{image}{wid} <=> $a->{image}{wid} or
         $b->{image}{hei} <=> $a->{image}{hei} or
         $a->{name} cmp $b->{name}
-    }
-    map +{ name => $_, image => load_image($_) },
-    @input_files;
+    } @inputs;
 
 my $tiling = empty_tiling;
 for my $input ( @inputs ) {
