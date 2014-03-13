@@ -264,7 +264,7 @@ sub save_map {
 ################################################################################
 
 sub show_help {
-    print STDERR "Usage: $0 -o out.png -m out.json [--] input.png [input.png ...]\n";
+    print STDERR "Usage: $0 [-v] -o out.png -m out.json [--] input.png [input.png ...]\n";
 }
 
 # parse arguments
