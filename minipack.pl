@@ -144,12 +144,15 @@ sub empty_tiling {
 }
 
 sub add_to_tiling {
-    my ($tiling, $name, $img) = @_;
+    my ($tiling, $name, $img, $add_space) = @_;
+
+    my $w = $img->{wid} + ($add_space ? 1 : 0);
+    my $h = $img->{hei} + ($add_space ? 1 : 0);
 
     # search for the smallest free block that's large enough
     my $best;
     for my $free ( @{$tiling->{'free'}} ) {
-        if ( $free->[2] >= $img->{wid} and $free->[3] >= $img->{hei} ) {
+        if ( $free->[2] >= $w and $free->[3] >= $h ) {
             # candidate
 
             if ( not defined $best or $best->[2]*$best->[3] > $free->[2]*$free->[3] ) {
@@ -171,11 +174,11 @@ sub add_to_tiling {
         }
 
         # add new free blocks if needed
-        if ( $best->[2] > $img->{wid} ) {
-            push @{$tiling->{'free'}}, [$best->[0]+$img->{wid}, $best->[1], $best->[2]-$img->{wid}, $best->[3]];
+        if ( $best->[2] > $w ) {
+            push @{$tiling->{'free'}}, [$best->[0]+$w, $best->[1], $best->[2]-$w, $best->[3]];
         }
-        if ( $best->[3] > $img->{hei} ) {
-            push @{$tiling->{'free'}}, [$best->[0], $best->[1]+$img->{hei}, $img->{wid}, $best->[3]-$img->{hei}];
+        if ( $best->[3] > $h ) {
+            push @{$tiling->{'free'}}, [$best->[0], $best->[1]+$h, $w, $best->[3]-$h];
         }
 
         # copy the image data
@@ -203,23 +206,23 @@ sub add_to_tiling {
     if ( $tiling->{img}{wid} > $tiling->{img}{hei} ) {
         # too wide, add space below the existing tiles and insert there.
 
-        if ( $img->{wid} > $tiling->{img}{wid} ) {
-            expand_tiling_width($tiling, $img->{wid} - $tiling->{img}{wid});
+        if ( $w > $tiling->{img}{wid} ) {
+            expand_tiling_width($tiling, $w - $tiling->{img}{wid});
         }
 
-        expand_tiling_height($tiling, $img->{hei});
+        expand_tiling_height($tiling, $h);
 
-        return add_to_tiling($tiling, $name, $img);
+        return add_to_tiling($tiling, $name, $img, $add_space);
     } else {
         # too tall or square, add space to the right and insert there.
 
-        if ( $img->{hei} > $tiling->{img}{hei} ) {
-            expand_tiling_height($tiling, $img->{hei} - $tiling->{img}{hei});
+        if ( $h > $tiling->{img}{hei} ) {
+            expand_tiling_height($tiling, $h - $tiling->{img}{hei});
         }
 
-        expand_tiling_width($tiling, $img->{wid});
+        expand_tiling_width($tiling, $w);
 
-        return add_to_tiling($tiling, $name, $img);
+        return add_to_tiling($tiling, $name, $img, $add_space);
     }
 }
 
@@ -292,7 +295,7 @@ sub save_map {
 ################################################################################
 
 sub show_help {
-    print STDERR "Usage: $0 [-v] -o out.png -m out.json [--] input.png [input.png ...]\n";
+    print STDERR "Usage: $0 [-v] [-s] -o out.png -m out.json [--] input.png [input.png ...]\n";
 }
 
 # parse arguments
@@ -300,6 +303,7 @@ my @input_files;
 my $output_image;
 my $output_map;
 my $verbose = 0;
+my $add_space = 0;
 while ( @ARGV ) {
     my $arg = shift;
     if ( $arg !~ /^-/ ) {
@@ -316,6 +320,8 @@ while ( @ARGV ) {
         exit 0;
     } elsif ( $arg eq "-v" ) {
         $verbose = 1;
+    } elsif ( $arg eq "-s" ) {
+        $add_space = 1;
     } else {
         die "Unknown option $arg\n";
     }
@@ -342,7 +348,7 @@ for my $input_file ( @input_files ) {
 my $tiling = empty_tiling;
 for my $input ( @inputs ) {
     print STDERR "adding image $input->{name} ($input->{image}{wid}x$input->{image}{hei})\n" if $verbose;
-    add_to_tiling($tiling, $input->{name}, $input->{image});
+    add_to_tiling($tiling, $input->{name}, $input->{image}, $add_space);
 }
 
 print STDERR "Writing $tiling->{img}{wid}x$tiling->{img}{hei} image to $output_image\n" if $verbose;
