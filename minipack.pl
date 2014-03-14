@@ -75,6 +75,31 @@ sub load_image {
             }
         }
         $data = $new;
+    } elsif ( $tuple_type eq "GRAYSCALE" ) {
+        my $new = "\xFF" x ($width*$height*4);
+        for my $y ( 0 .. $height-1 ) {
+            my $in_row_offset = $y * $width;
+            my $out_row_offset = $y * $width*4;
+            for my $x ( 0 .. $width-1 ) {
+                my $in_pix_offset = $in_row_offset + $x;
+                my $out_pix_offset = $out_row_offset + $x*4;
+                substr($new, $out_pix_offset, 3) = substr($data, $in_pix_offset, 1) x 3;
+            }
+        }
+        $data = $new;
+    } elsif ( $tuple_type eq "GRAYSCALE_ALPHA" ) {
+        my $new = "\x00" x ($width*$height*4);
+        for my $y ( 0 .. $height-1 ) {
+            my $in_row_offset = $y * $width*2;
+            my $out_row_offset = $y * $width*4;
+            for my $x ( 0 .. $width-1 ) {
+                my $in_pix_offset = $in_row_offset + $x*2;
+                my $out_pix_offset = $out_row_offset + $x*4;
+                substr($new, $out_pix_offset, 3) = substr($data, $in_pix_offset, 1) x 3;
+                substr($new, $out_pix_offset+3, 1) = substr($data, $in_pix_offset+1, 1);
+            }
+        }
+        $data = $new;
     } else {
         die "Unknown tuple type $tuple_type from convert on $file\n";
     }
