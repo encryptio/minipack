@@ -240,13 +240,16 @@ sub save_map {
             version => "1.0",
             image => $output_image,
             format => "RGBA8888",
-            size => {w => $tiling->{img}{wid}, h => $tiling->{img}{hei}},
+            size => {w => 0+$tiling->{img}{wid}, h => 0+$tiling->{img}{hei}},
             scale => "1",
         },
     };
 
     for my $save ( @{$tiling->{saved}} ) {
         my ($x,$y,$w,$h,$n) = @{$save}{qw/ x y wid hei name /};
+
+        $_ = 0+$_ for $x, $y, $w, $h;
+
         $out->{frames}{$save->{name}} = {
             "frame" => {x => $x, y => $y, w => $w, h => $h},
             "rotated" => JSON::false,
